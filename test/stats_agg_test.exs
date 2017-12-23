@@ -1,5 +1,5 @@
 defmodule Ciroque.Monitoring.StatsAggTest do
-  use ExUnit.Case
+  use Ciroque.Monitoring.GenServerCase
 
   alias Ciroque.Monitoring.StatsAgg
   doctest StatsAgg
@@ -25,13 +25,11 @@ defmodule Ciroque.Monitoring.StatsAggTest do
 
   test "handles record function duration cast", %{server: server} do
     :ok = GenServer.cast(server, {:record_function_duration, function_duration_args()})
-    new_state = :sys.get_state(server)
-    assert new_state == empty_state()
+    assert_cast_state(server, empty_state())
   end
 
   test "record_function_duration public api", %{server: server} do
     StatsAgg.record_function_duration(server, function_duration_args())
-    new_state = :sys.get_state(server)
-    assert new_state == empty_state()
+    assert_cast_state(server, empty_state())
   end
 end
