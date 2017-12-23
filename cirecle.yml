@@ -1,0 +1,13 @@
+---
+version: 2
+jobs:
+    steps:
+      - checkout
+
+      - run:
+          name: Compile dependencies and app
+          command: mix do deps.get, deps.compile, compile
+
+      - run:
+          name: Run Tests
+          command: mix test
