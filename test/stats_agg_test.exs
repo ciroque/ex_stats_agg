@@ -47,4 +47,20 @@ defmodule Ciroque.Monitoring.StatsAggTest do
   test "retrieve_function_stats public api", %{server: server} do
     :notfound = StatsAgg.retrieve_function_stats(server, nonexistant_function_stats_args())
   end
+
+#  test "record duration and retrieve stats", %{server: server} do
+#    record_args = function_duration_args()
+#    retrieve_args = %{ module: record_args.module, function: record_args.function}
+#    StatsAgg.record_function_duration(server, record_args)
+#    {:ok, stats} = StatsAgg.retrieve_function_stats(server, retrieve_args)
+#    assert stats == %Ciroque.Monitoring.FunctionDurations{
+#      module: record_args.module,
+#      function: record_args.function,
+#      most_recent_duration: record_args.duration,
+#      max_duration: record_args.duration,
+#      min_duration: record_args.duration,
+#      avg_duration: record_args.duration,
+#      duration_history: [record_args.duration]
+#    }
+#  end
 end
