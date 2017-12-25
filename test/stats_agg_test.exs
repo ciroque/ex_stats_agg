@@ -100,6 +100,40 @@ defmodule Ciroque.Monitoring.StatsAggTest do
     assert actual_stats === expected_stats
   end
 
+  test "write durations for a multiple functions and get the stats", %{server: server} do
+    update_args_one = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 100}
+    update_args_two = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 200}
+    update_args_three = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 300}
+
+    update_args_four = %{group: "test-group-two", module: "test-module-two", function: "test-function/2", duration: 700}
+    update_args_five = %{group: "test-group-two", module: "test-module-two", function: "test-function/2", duration: 800}
+    update_args_six = %{group: "test-group-three", module: "test-module-three", function: "test-function/3", duration: 900}
+
+    expected_stats = %{
+      avg_duration: 750,
+      durations: [800, 700],
+      function: "test-function/2",
+      group: "test-group-two",
+      max_duration: 800,
+      min_duration: 700,
+      module: "test-module-two",
+      most_recent_duration: 800
+    }
+
+    StatsAgg.record_function_duration(server, update_args_one)
+    StatsAgg.record_function_duration(server, update_args_two)
+    StatsAgg.record_function_duration(server, update_args_three)
+    StatsAgg.record_function_duration(server, update_args_four)
+    StatsAgg.record_function_duration(server, update_args_five)
+    StatsAgg.record_function_duration(server, update_args_six)
+
+    _ = :sys.get_state(server)
+
+    actual_stats = StatsAgg.retrieve_function_stats(server, update_args_four)
+
+    assert actual_stats === expected_stats
+  end
+
   test "multiple keys" do
     initial_state = %{}
 
