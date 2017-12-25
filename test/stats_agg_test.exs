@@ -13,11 +13,11 @@ defmodule Ciroque.Monitoring.StatsAggTest do
   end
 
   defp nonexistant_function_stats_args do
-    %{
-      group: :test,
-      module: __MODULE__,
-      function: "nonexistant/0"
-    }
+    [
+      "test",
+       "#{__MODULE__}",
+      "nonexistant/0"
+    ]
   end
 
   defp expected_state do
@@ -58,8 +58,30 @@ defmodule Ciroque.Monitoring.StatsAggTest do
     ]
     |> Enum.map(&StatsAgg.record_function_duration/1)
 
-    query = %{group: "group-two"}
-    expected_state = %{}
+    query = ["group-two"]
+    expected_state = [
+      %{
+        avg_duration: 125,
+        durations: [130, 120],
+        function: "function/2",
+        group: "group-two",
+        max_duration: 130,
+        min_duration: 120,
+        module: "module-one",
+        most_recent_duration: 130
+      },
+      %{
+        avg_duration: 140,
+        durations: [140],
+        function: "function/3",
+        group: "group-two",
+        max_duration: 140,
+        min_duration: 140,
+        module: "module-two",
+        most_recent_duration: 140
+      }
+    ]
+
     actual_state = StatsAgg.retrieve_stats(query)
 
     assert actual_state === expected_state
@@ -89,6 +111,8 @@ defmodule Ciroque.Monitoring.StatsAggTest do
     update_args_two = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 200}
     update_args_three = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 300}
 
+    query = ["test-group", "test-module", "test-function/0"]
+
     expected_stats = %{
       avg_duration: 200,
       durations: [300, 200, 100],
@@ -106,7 +130,7 @@ defmodule Ciroque.Monitoring.StatsAggTest do
 
     _ = :sys.get_state(:ex_stats_agg)
 
-    actual_stats = StatsAgg.retrieve_stats(update_args_one)
+    actual_stats = StatsAgg.retrieve_stats(query)
 
     assert actual_stats === expected_stats
   end
@@ -119,6 +143,8 @@ defmodule Ciroque.Monitoring.StatsAggTest do
     update_args_four = %{group: "test-group-two", module: "test-module-two", function: "test-function/2", duration: 700}
     update_args_five = %{group: "test-group-two", module: "test-module-two", function: "test-function/2", duration: 800}
     update_args_six = %{group: "test-group-three", module: "test-module-three", function: "test-function/3", duration: 900}
+
+    query = ["test-group-two", "test-module-two", "test-function/2"]
 
     expected_stats = %{
       avg_duration: 750,
@@ -140,7 +166,7 @@ defmodule Ciroque.Monitoring.StatsAggTest do
 
     _ = :sys.get_state(:ex_stats_agg)
 
-    actual_stats = StatsAgg.retrieve_stats(update_args_four)
+    actual_stats = StatsAgg.retrieve_stats(query)
 
     assert actual_stats === expected_stats
   end
