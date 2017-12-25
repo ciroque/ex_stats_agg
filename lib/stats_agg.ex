@@ -26,8 +26,12 @@ defmodule Ciroque.Monitoring.StatsAgg do
     GenServer.cast(:ex_stats_agg, {:record_function_duration, args})
   end
 
-  def retrieve_function_stats(%{module: _module, function: _function} = args) do
-    GenServer.call(:ex_stats_agg, {:retrieve_function_stats, args})
+  def retrieve_stats(%{group: _group} = query) do
+    GenServer.call(:ex_stats_agg, {:retrieve_stats, query})
+  end
+
+  def retrieve_stats(%{group: _group, module: _module, function: _function} = query) do
+    GenServer.call(:ex_stats_agg, {:retrieve_stats, query})
   end
 
   ## GenServer
@@ -56,7 +60,7 @@ defmodule Ciroque.Monitoring.StatsAgg do
     {:noreply, update_state(state, args)}
   end
 
-  def handle_call({:retrieve_function_stats, %{group: group, module: module, function: function}}, _from, state) do
+  def handle_call({:retrieve_stats, %{group: group, module: module, function: function}}, _from, state) do
     keys = [
       to_string(group),
       to_string(module),
@@ -77,6 +81,10 @@ defmodule Ciroque.Monitoring.StatsAgg do
         )
         {:reply, function_stats, state}
     end
+  end
+
+  def handle_call({:retrieve_stats, %{group: _group}}, _from, state) do
+    {:reply, %{}, state}
   end
 
   def calculate_stats(durations) do
@@ -102,5 +110,36 @@ defmodule Ciroque.Monitoring.StatsAgg do
         {_, new_state} = get_and_update_in(state, keys, fn v -> {v, [duration | v]} end)
         new_state
     end
+  end
+
+  def build_flattened_map(state, []) do
+    Map.keys(state)
+    |> Enum.map(fn key -> build_flattened_map(state, [key]) end)
+    |> List.flatten
+  end
+
+  def build_flattened_map(state, [_|_] = keys) do
+    stats = case state |> get_in(keys) do
+      nil -> []
+      children ->
+        process_children(state, keys, children)
+    end
+    stats
+  end
+
+  defp process_children(_state, keys, children) when is_list(children) do
+    output_keys = [:group, :module, :function, :durations]
+    List.zip([output_keys, keys ++ [children]])
+    |> Enum.into(%{})
+  end
+
+  defp process_children(state, keys, children) when is_map(children) do
+    children
+    |> Map.keys
+    |> Enum.map(fn key ->
+      new_keys = keys ++ [key]
+      build_flattened_map(state, new_keys)
+    end)
+    |> List.flatten
   end
 end

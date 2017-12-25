@@ -40,11 +40,29 @@ defmodule Ciroque.Monitoring.StatsAggTest do
   end
 
   test "retrieve empty function duration info" do
-    :notfound = GenServer.call(:ex_stats_agg, {:retrieve_function_stats, nonexistant_function_stats_args()})
+    :notfound = GenServer.call(:ex_stats_agg, {:retrieve_stats, nonexistant_function_stats_args()})
   end
 
-  test "retrieve_function_stats public api" do
-    :notfound = StatsAgg.retrieve_function_stats(nonexistant_function_stats_args())
+  test "retrieve_stats public api" do
+    :notfound = StatsAgg.retrieve_stats(nonexistant_function_stats_args())
+  end
+
+  test "retrieve_stats for group" do
+    [
+      %{group: "group-one", module: "module-one", function: "function/0", duration: 1000},
+      %{group: "group-one", module: "module-one", function: "function/0", duration: 1100},
+      %{group: "group-two", module: "module-one", function: "function/2", duration: 120},
+      %{group: "group-two", module: "module-one", function: "function/2", duration: 130},
+      %{group: "group-two", module: "module-two", function: "function/3", duration: 140},
+      %{group: "group-three", module: "module-two", function: "function/4", duration: 330},
+    ]
+    |> Enum.map(&StatsAgg.record_function_duration/1)
+
+    query = %{group: "group-two"}
+    expected_state = %{}
+    actual_state = StatsAgg.retrieve_stats(query)
+
+    assert actual_state === expected_state
   end
 
   test "update_state with new keys" do
@@ -88,7 +106,7 @@ defmodule Ciroque.Monitoring.StatsAggTest do
 
     _ = :sys.get_state(:ex_stats_agg)
 
-    actual_stats = StatsAgg.retrieve_function_stats(update_args_one)
+    actual_stats = StatsAgg.retrieve_stats(update_args_one)
 
     assert actual_stats === expected_stats
   end
@@ -122,7 +140,7 @@ defmodule Ciroque.Monitoring.StatsAggTest do
 
     _ = :sys.get_state(:ex_stats_agg)
 
-    actual_stats = StatsAgg.retrieve_function_stats(update_args_four)
+    actual_stats = StatsAgg.retrieve_stats(update_args_four)
 
     assert actual_stats === expected_stats
   end
