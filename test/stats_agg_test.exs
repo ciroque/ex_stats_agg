@@ -73,6 +73,33 @@ defmodule Ciroque.Monitoring.StatsAggTest do
     assert actual_state === expected_state
   end
 
+  test "write durations for a single function and get the stats", %{server: server} do
+    update_args_one = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 100}
+    update_args_two = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 200}
+    update_args_three = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 300}
+
+    expected_stats = %{
+      avg_duration: 200,
+      durations: [300, 200, 100],
+      function: "test-function/0",
+      group: "test-group",
+      max_duration: 300,
+      min_duration: 100,
+      module: "test-module",
+      most_recent_duration: 300
+    }
+
+    StatsAgg.record_function_duration(server, update_args_one)
+    StatsAgg.record_function_duration(server, update_args_two)
+    StatsAgg.record_function_duration(server, update_args_three)
+
+    _ = :sys.get_state(server)
+
+    actual_stats = StatsAgg.retrieve_function_stats(server, update_args_one)
+
+    assert actual_stats === expected_stats
+  end
+
   test "multiple keys" do
     initial_state = %{}
 
