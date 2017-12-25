@@ -98,4 +98,49 @@ defmodule Ciroque.Monitoring.StatsAggTest do
 
     assert actual_state === expected_state
   end
+
+  test "calculate_stats with one recorded duration" do
+    durations = [1000]
+    expected_stats = %{
+      most_recent_duration: 1000,
+      max_duration: 1000,
+      min_duration: 1000,
+      avg_duration: 1000,
+      durations: [1000]
+    }
+
+    actual_stats = StatsAgg.calculate_stats(durations)
+
+    assert actual_stats === expected_stats
+  end
+
+  test "calculate_stats with many recorded durations" do
+    durations = [1000, 500, 750]
+    expected_stats = %{
+      most_recent_duration: 1000,
+      max_duration: 1000,
+      min_duration: 500,
+      avg_duration: 750,
+      durations: [1000, 500, 750]
+    }
+
+    actual_stats = StatsAgg.calculate_stats(durations)
+
+    assert actual_stats === expected_stats
+  end
+
+  test "calculate_stats with 100 recorded durations" do
+    durations = Enum.to_list(1..100)
+    expected_stats = %{
+      most_recent_duration: 1,
+      max_duration: 100,
+      min_duration: 1,
+      avg_duration: 50,
+      durations: durations
+    }
+
+    actual_stats = StatsAgg.calculate_stats(durations)
+
+    assert actual_stats === expected_stats
+  end
 end

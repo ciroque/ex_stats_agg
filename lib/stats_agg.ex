@@ -66,13 +66,27 @@ defmodule Ciroque.Monitoring.StatsAgg do
     case state |> get_in(keys) do
       nil ->
         {:reply, :notfound, state}
-      found ->
-        {:reply, found, state}
+      durations ->
+        function_stats = Map.merge(
+          calculate_stats(durations),
+          %{
+            group: group,
+            module: module,
+            function: function
+          }
+        )
+        {:reply, function_stats, state}
     end
   end
 
-  def calculate_stats() do
-    {:ok}
+  def calculate_stats(durations) do
+    %{
+      avg_duration: div(Enum.sum(durations), length(durations)),
+      durations: durations,
+      max_duration: Enum.max(durations),
+      min_duration: Enum.min(durations),
+      most_recent_duration: List.first(durations),
+    }
   end
 
   def update_state(state, %{group: group, module: module, function: function, duration: duration}) do
