@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: elixir/elixir:1.5
+      - image: elixir:1.5
     working_directory: ~/stats_agg
     steps:
       - checkout
