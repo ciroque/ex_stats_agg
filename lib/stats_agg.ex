@@ -1,9 +1,20 @@
 defmodule Ciroque.Monitoring.StatsAgg do
   @moduledoc """
   Documentation for StatsAgg.
-  """
 
-  @behaviour Ciroque.Monitoring.StatsAggBehaviour
+
+  %{
+    group: String.t,
+    module: String.t,
+    function: String.t,
+    most_recent_duration: integer,
+    max_duration: integer,
+    min_duration: integer,
+    avg_duration: integer,
+    duration_history: list(integer)
+  }
+
+  """
 
   use GenServer
 
@@ -45,9 +56,23 @@ defmodule Ciroque.Monitoring.StatsAgg do
     {:noreply, update_state(state, args)}
   end
 
-  def handle_call({:retrieve_function_stats, %{group: _group, module: _module, function: _function}} = args, _from, state) do
-    Logger.debug("#{__MODULE__}::#{inspect(__ENV__.function)}(#{inspect(args)})[#{inspect(state)}]")
-    {:reply, :notfound, state}
+  def handle_call({:retrieve_function_stats, %{group: group, module: module, function: function}}, _from, state) do
+    keys = [
+      to_string(group),
+      to_string(module),
+      to_string(function)
+    ]
+
+    case state |> get_in(keys) do
+      nil ->
+        {:reply, :notfound, state}
+      found ->
+        {:reply, found, state}
+    end
+  end
+
+  def calculate_stats() do
+    {:ok}
   end
 
   def update_state(state, %{group: group, module: module, function: function, duration: duration}) do
