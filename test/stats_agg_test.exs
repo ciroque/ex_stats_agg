@@ -4,8 +4,6 @@ defmodule Ciroque.Monitoring.StatsAggTest do
   alias Ciroque.Monitoring.StatsAgg
   doctest StatsAgg
 
-  defp empty_state, do: %{}
-
   defp function_duration_args do %{
       group: :test,
       module: __MODULE__,
@@ -31,27 +29,22 @@ defmodule Ciroque.Monitoring.StatsAggTest do
     %{server: pid}
   end
 
-  test "start link with initial state" do
-    {:ok, pid} = StatsAgg.start_link(empty_state())
-    assert pid != nil
+  test "handles record function duration cast" do
+    :ok = GenServer.cast(:ex_stats_agg, {:record_function_duration, function_duration_args()})
+    assert_cast_state(:ex_stats_agg, expected_state())
   end
 
-  test "handles record function duration cast", %{server: server} do
-    :ok = GenServer.cast(server, {:record_function_duration, function_duration_args()})
-    assert_cast_state(server, expected_state())
+  test "record_function_duration public api" do
+    StatsAgg.record_function_duration(function_duration_args())
+    assert_cast_state(:ex_stats_agg, expected_state())
   end
 
-  test "record_function_duration public api", %{server: server} do
-    StatsAgg.record_function_duration(server, function_duration_args())
-    assert_cast_state(server, expected_state())
+  test "retrieve empty function duration info" do
+    :notfound = GenServer.call(:ex_stats_agg, {:retrieve_function_stats, nonexistant_function_stats_args()})
   end
 
-  test "retrieve empty function duration info", %{server: server} do
-    :notfound = GenServer.call(server, {:retrieve_function_stats, nonexistant_function_stats_args()})
-  end
-
-  test "retrieve_function_stats public api", %{server: server} do
-    :notfound = StatsAgg.retrieve_function_stats(server, nonexistant_function_stats_args())
+  test "retrieve_function_stats public api" do
+    :notfound = StatsAgg.retrieve_function_stats(nonexistant_function_stats_args())
   end
 
   test "update_state with new keys" do
@@ -73,7 +66,7 @@ defmodule Ciroque.Monitoring.StatsAggTest do
     assert actual_state === expected_state
   end
 
-  test "write durations for a single function and get the stats", %{server: server} do
+  test "write durations for a single function and get the stats" do
     update_args_one = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 100}
     update_args_two = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 200}
     update_args_three = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 300}
@@ -89,18 +82,18 @@ defmodule Ciroque.Monitoring.StatsAggTest do
       most_recent_duration: 300
     }
 
-    StatsAgg.record_function_duration(server, update_args_one)
-    StatsAgg.record_function_duration(server, update_args_two)
-    StatsAgg.record_function_duration(server, update_args_three)
+    StatsAgg.record_function_duration(update_args_one)
+    StatsAgg.record_function_duration(update_args_two)
+    StatsAgg.record_function_duration(update_args_three)
 
-    _ = :sys.get_state(server)
+    _ = :sys.get_state(:ex_stats_agg)
 
-    actual_stats = StatsAgg.retrieve_function_stats(server, update_args_one)
+    actual_stats = StatsAgg.retrieve_function_stats(update_args_one)
 
     assert actual_stats === expected_stats
   end
 
-  test "write durations for a multiple functions and get the stats", %{server: server} do
+  test "write durations for a multiple functions and get the stats" do
     update_args_one = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 100}
     update_args_two = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 200}
     update_args_three = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 300}
@@ -120,16 +113,16 @@ defmodule Ciroque.Monitoring.StatsAggTest do
       most_recent_duration: 800
     }
 
-    StatsAgg.record_function_duration(server, update_args_one)
-    StatsAgg.record_function_duration(server, update_args_two)
-    StatsAgg.record_function_duration(server, update_args_three)
-    StatsAgg.record_function_duration(server, update_args_four)
-    StatsAgg.record_function_duration(server, update_args_five)
-    StatsAgg.record_function_duration(server, update_args_six)
+    StatsAgg.record_function_duration(update_args_one)
+    StatsAgg.record_function_duration(update_args_two)
+    StatsAgg.record_function_duration(update_args_three)
+    StatsAgg.record_function_duration(update_args_four)
+    StatsAgg.record_function_duration(update_args_five)
+    StatsAgg.record_function_duration(update_args_six)
 
-    _ = :sys.get_state(server)
+    _ = :sys.get_state(:ex_stats_agg)
 
-    actual_stats = StatsAgg.retrieve_function_stats(server, update_args_four)
+    actual_stats = StatsAgg.retrieve_function_stats(update_args_four)
 
     assert actual_stats === expected_stats
   end

@@ -22,12 +22,12 @@ defmodule Ciroque.Monitoring.StatsAgg do
 
   ## Public Interface
 
-  def record_function_duration(server, %{group: _group, module: _module, function: _function, duration: _duration} = args) do
-    GenServer.cast(server, {:record_function_duration, args})
+  def record_function_duration(%{group: _group, module: _module, function: _function, duration: _duration} = args) do
+    GenServer.cast(:ex_stats_agg, {:record_function_duration, args})
   end
 
-  def retrieve_function_stats(server, %{module: _module, function: _function} = args) do
-    GenServer.call(server, {:retrieve_function_stats, args})
+  def retrieve_function_stats(%{module: _module, function: _function} = args) do
+    GenServer.call(:ex_stats_agg, {:retrieve_function_stats, args})
   end
 
   ## GenServer
@@ -37,7 +37,7 @@ defmodule Ciroque.Monitoring.StatsAgg do
   end
 
   def start_link(state) do
-    GenServer.start_link(__MODULE__, state)
+    GenServer.start_link(__MODULE__, state, name: :ex_stats_agg)
   end
 
   def init(state) do

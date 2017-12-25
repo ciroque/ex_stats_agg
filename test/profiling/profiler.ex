@@ -25,7 +25,7 @@ defmodule Ciroque.Monitoring.StatsAgg.Profiler do
   end
 
   def run() do
-    {:ok, stats_agg} = StatsAgg.start_link()
+    {:ok, _stats_agg} = StatsAgg.start_link()
 
     arguments = [
       %{group: "group_one", module: "module_one", function: "fx/1", duration: 100},
@@ -46,10 +46,7 @@ defmodule Ciroque.Monitoring.StatsAgg.Profiler do
     |> Enum.map(
       fn index ->
         args = arguments |> Enum.at(rem index, divisor)
-        StatsAgg.record_function_duration(
-          stats_agg,
-          args
-        )
+        StatsAgg.record_function_duration(args)
       end)
   end
 end
