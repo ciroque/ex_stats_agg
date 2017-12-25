@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/cci-demo-phoenix
+    working_directory: ~/stats_agg
     docker:
       - image: ciroque/phoenix-apps-build
     steps:
