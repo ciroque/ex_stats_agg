@@ -47,8 +47,31 @@ defmodule Ciroque.Monitoring.StatsAggTest do
     :notfound = StatsAgg.retrieve_stats(nonexistant_function_stats_args())
   end
 
+  test "record durations using timestamps" do
+    ended_at = :os.system_time(:millisecond)
+    duration = 3 * 1000 # 3 seconds
+    started_at = ended_at - duration
+    args = %{group: "test-group", module: "test-module", function: "function/0", started_at: started_at, ended_at: ended_at}
+    expected_stats = %{
+      avg_duration: duration,
+      durations: [duration],
+      function: "function/0",
+      group: "test-group",
+      max_duration: duration,
+      min_duration: duration,
+      module: "test-module",
+      most_recent_duration: duration
+    }
 
-  test "write durations for a single function and get the stats" do
+    StatsAgg.record_function_duration(args)
+
+    _ = :sys.get_state(:ex_stats_agg)
+
+    actual_stats = StatsAgg.retrieve_stats(["test-group", "test-module", "function/0"])
+    assert actual_stats === expected_stats
+  end
+
+  test "record durations for a single function and get the stats" do
     update_args_one = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 100}
     update_args_two = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 200}
     update_args_three = %{group: "test-group", module: "test-module", function: "test-function/0", duration: 300}

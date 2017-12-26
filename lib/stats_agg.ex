@@ -24,7 +24,11 @@ defmodule Ciroque.Monitoring.StatsAgg do
 
   ## Public Interface
 
-  def record_function_duration(%{group: _group, module: _module, function: _function, duration: _duration} = args) do
+  @type record_function_duration_args_t ::
+          %{group: String.t, module: String.t, function: String.t, duration: integer}
+          | %{group: String.t, module: String.t, function: String.t, started_at: integer, ended_at: integer}
+
+  def record_function_duration(record_function_duration_args_t = args) do
     GenServer.cast(:ex_stats_agg, {:record_function_duration, args})
   end
 
@@ -41,15 +45,7 @@ defmodule Ciroque.Monitoring.StatsAgg do
     end
   end
 
-  def handle_cast({
-    :record_function_duration,
-    %{
-      group: _group,
-      module: _module,
-      function: _function,
-      duration: _duration} = args
-  }, state) do
-
+  def handle_cast({:record_function_duration, record_function_duration_args_t = args}, state) do
     {:noreply, Reducers.put_duration(state, args)}
   end
 
