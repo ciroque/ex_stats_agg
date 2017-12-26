@@ -16,11 +16,11 @@ defmodule Ciroque.Monitoring.StatsAgg do
 
   """
 
-  use GenServer
+  alias Ciroque.Monitoring.Reducers
 
   require Logger
 
-  alias Ciroque.Monitoring.Reducers
+  use GenServer
 
   ## Public Interface
 
@@ -34,16 +34,11 @@ defmodule Ciroque.Monitoring.StatsAgg do
 
   ## GenServer
 
-  def start_link() do
-    start_link(%{})
-  end
-
-  def start_link(state) do
-    GenServer.start_link(__MODULE__, state, name: :ex_stats_agg)
-  end
-
-  def init(state) do
-    {:ok, state}
+  def handle_call({:retrieve_stats, keys}, _from, state) when is_list(keys) do
+    case Reducers.retrieve_stats(state, keys) do
+      [] -> {:reply, :notfound, state}
+      function_stats -> {:reply, function_stats, state}
+    end
   end
 
   def handle_cast({
@@ -53,15 +48,20 @@ defmodule Ciroque.Monitoring.StatsAgg do
       module: _module,
       function: _function,
       duration: _duration} = args
-    }, state) do
+  }, state) do
 
     {:noreply, Reducers.update_state(state, args)}
   end
 
-  def handle_call({:retrieve_stats, keys}, _from, state) when is_list(keys) do
-    case Reducers.retrieve_stats(state, keys) do
-      [] -> {:reply, :notfound, state}
-      function_stats -> {:reply, function_stats, state}
-    end
+  def init(state) do
+    {:ok, state}
+  end
+
+  def start_link() do
+    start_link(%{})
+  end
+
+  def start_link(state) do
+    GenServer.start_link(__MODULE__, state, name: :ex_stats_agg)
   end
 end
