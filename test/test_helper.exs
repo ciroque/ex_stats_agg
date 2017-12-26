@@ -1,4 +1,4 @@
-"""
+_ = """
 MIT License
 
 Copyright (c) 2017 Steven Wagner

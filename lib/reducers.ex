@@ -1,4 +1,4 @@
-"""
+_ = """
 MIT License
 
 Copyright (c) 2017 Steven Wagner
@@ -70,6 +70,27 @@ defmodule Ciroque.Monitoring.Reducers do
   end
 
   @doc """
+  Records the given duration into the state.
+
+  Note: While this can be used outside of the StatsAgg module, it is not intended for direct use
+  outside of the Context of the StatsAgg module.
+  """
+  def put_duration(state, %{group: group, module: module, function: function, duration: duration}) do
+    keys = [
+      to_string(group),
+      to_string(module),
+      to_string(function)
+    ]
+    case get_in(state, keys) do
+      nil ->
+        put_in(state, Enum.map(keys, &Access.key(&1, %{})), [duration])
+      _ ->
+        {_, new_state} = get_and_update_in(state, keys, fn v -> {v, [duration | v]} end)
+        new_state
+    end
+  end
+
+  @doc """
   Calculates and returns the stats for the given keys in the given state.
 
   The shape of the data returned:
@@ -93,27 +114,6 @@ defmodule Ciroque.Monitoring.Reducers do
   def retrieve_stats(state, keys) do
     flatten_entries(state, keys)
     |> with_stats
-  end
-
-  @doc """
-  Records the given duration into the state.
-
-  Note: While this can be used outside of the StatsAgg module, it is not intended for direct use
-  outside of the Context of the StatsAgg module.
-  """
-  def put_duration(state, %{group: group, module: module, function: function, duration: duration}) do
-    keys = [
-      to_string(group),
-      to_string(module),
-      to_string(function)
-    ]
-    case get_in(state, keys) do
-      nil ->
-        put_in(state, Enum.map(keys, &Access.key(&1, %{})), [duration])
-      _ ->
-        {_, new_state} = get_and_update_in(state, keys, fn v -> {v, [duration | v]} end)
-        new_state
-    end
   end
 
   defp flatten_entries(state, []) do
