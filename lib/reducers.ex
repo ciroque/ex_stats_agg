@@ -21,7 +21,16 @@ defmodule Ciroque.Monitoring.Reducers do
     |> with_stats
   end
 
-  def update_state(state, %{group: group, module: module, function: function, duration: duration}) do
+  def put_duration(state, %{group: _group, module: _module, function: _function, started_at: started_at, ended_at: ended_at} = args) do
+    duration = ended_at - started_at
+    args = args
+    |> Map.drop([:started_at, :ended_at])
+    |> Map.put_new(:duration, duration)
+
+    put_duration(state, args)
+  end
+
+  def put_duration(state, %{group: group, module: module, function: function, duration: duration}) do
     keys = [
       to_string(group),
       to_string(module),

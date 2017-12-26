@@ -50,7 +50,7 @@ defmodule Ciroque.Monitoring.StatsAgg do
       duration: _duration} = args
   }, state) do
 
-    {:noreply, Reducers.update_state(state, args)}
+    {:noreply, Reducers.put_duration(state, args)}
   end
 
   def init(state) do
