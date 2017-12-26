@@ -1,17 +1,42 @@
+_ = """
+MIT License
+
+Copyright (c) 2017 Steven Wagner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 defmodule Ciroque.Monitoring.StatsAggMacros do
   @moduledoc """
   This module contains macro definitions that make
   using the `Ciroque.Monitoring.StatsAgg` module easier.
 
   By including this module with: `use Ciroque.Monitoring.StatsAggMacros`
-  in your modules you can instrument your functions like this:
+  in your modules you can instrument your functions.
 
   ## Example
+  ```
+  defmoule MyApp.MyModule do
+    use Ciroque.Monitoring.StatsAggMacros
 
-    defmoule MyApp.MyModule do
-      use Ciroque.Monitoring.StatsAggMacros
-
-    end
+  end
+  ```
   """
 
   @doc false
@@ -35,29 +60,30 @@ defmodule Ciroque.Monitoring.StatsAggMacros do
   Allows easy use of the StatsAgg library
   to track function execution times.
 
-    ## Example
-
-    defmodule MyApp.MyModule do
-      @group_name "MyGroup"
-
-      alias Ciroque.Monitoring.StatsAgg
-
-      require Logger
-
-      use Ciroque.Monitoring.StatsAggMacros
-
-      def my_function() do
-        with_stats_agg(@group_name) do
-          ## Your logic goes here...
-          ...
-        end
-      end
-
-      def log_stats() do
-        stats = StatsAgg.retrieve_stats([@group_name])
-        Logger.debug("StatsAgg statics for # {@group_name}: # {inspect(stats)}")
+  ## Example
+  ```
+  iex> Ciroque.Monitoring.StatsAgg.start_link()
+  iex> defmodule MyApp.MyModule do
+    alias Ciroque.Monitoring.StatsAgg
+    require Logger
+    use Ciroque.Monitoring.StatsAggMacros
+    def group_name() do
+      "MyGroup"
+    end
+    def my_function() do
+      with_stats_agg(group_name()) do
+        for i <- 1..10_000, do: %{ index: i, mapped: rem(i, 10) }
       end
     end
+    def log_stats() do
+      group = group_name()
+      stats = StatsAgg.retrieve_stats([group])
+      IO.inspect(stats)
+    end
+  end
+  iex> for _ <- 1..7, do: MyApp.MyModule.my_function()
+  iex> MyApp.MyModule.log_stats()
+  ```
 
   Note that the `group` parameter can be used to associate entries. The idea is
   that by using groups it becomes easier to create groupings of StatsAgg stats
