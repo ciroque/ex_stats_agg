@@ -28,14 +28,15 @@ defmodule Ciroque.Monitoring.StatsAggMacros do
   using the `Ciroque.Monitoring.StatsAgg` module easier.
 
   By including this module with: `use Ciroque.Monitoring.StatsAggMacros`
-  in your modules you can instrument your functions like this:
+  in your modules you can instrument your functions.
 
   ## Example
+  ```
+  defmoule MyApp.MyModule do
+    use Ciroque.Monitoring.StatsAggMacros
 
-    defmoule MyApp.MyModule do
-      use Ciroque.Monitoring.StatsAggMacros
-
-    end
+  end
+  ```
   """
 
   @doc false
@@ -59,29 +60,30 @@ defmodule Ciroque.Monitoring.StatsAggMacros do
   Allows easy use of the StatsAgg library
   to track function execution times.
 
-    ## Example
-
-    defmodule MyApp.MyModule do
-      @group_name "MyGroup"
-
-      alias Ciroque.Monitoring.StatsAgg
-
-      require Logger
-
-      use Ciroque.Monitoring.StatsAggMacros
-
-      def my_function() do
-        with_stats_agg(@group_name) do
-          ## Your logic goes here...
-          ...
-        end
-      end
-
-      def log_stats() do
-        stats = StatsAgg.retrieve_stats([@group_name])
-        Logger.debug("StatsAgg statics for # {@group_name}: # {inspect(stats)}")
+  ## Example
+  ```
+  iex> Ciroque.Monitoring.StatsAgg.start_link()
+  iex> defmodule MyApp.MyModule do
+    alias Ciroque.Monitoring.StatsAgg
+    require Logger
+    use Ciroque.Monitoring.StatsAggMacros
+    def group_name() do
+      "MyGroup"
+    end
+    def my_function() do
+      with_stats_agg(group_name()) do
+        for i <- 1..10_000, do: %{ index: i, mapped: rem(i, 10) }
       end
     end
+    def log_stats() do
+      group = group_name()
+      stats = StatsAgg.retrieve_stats([group])
+      IO.inspect(stats)
+    end
+  end
+  iex> for _ <- 1..7, do: MyApp.MyModule.my_function()
+  iex> MyApp.MyModule.log_stats()
+  ```
 
   Note that the `group` parameter can be used to associate entries. The idea is
   that by using groups it becomes easier to create groupings of StatsAgg stats

@@ -24,12 +24,25 @@ SOFTWARE.
 
 defmodule Ciroque.Monitoring.Reducers do
   @moduledoc """
-    # Ciroque.Monitoring.Reducers
+    This module contains the functions necessary to maintain the data structure
+    used by the `Ciroque.Monitoring.StatsAgg` module.
 
-    This module contains the functions necessary to maintain the data structure used by the `Ciroque.Monitoring.StatsAgg` module.
-
+    This module is not intended for direct use outside of the context of the StatsAgg module.
   """
 
+  @doc """
+  Calculates various statistics on the given array of execution durations.
+
+  Included are:
+      - Average
+      - Max
+      - Min
+
+    The return is a map containing the original array of durations, the above statistics and the most recent duration.
+
+    Note: While this can be used outside of the StatsAgg module, it is not intended for direct use
+    outside of the Context of the StatsAgg module.
+  """
   def calculate_stats(durations) do
     %{
       avg_duration: div(Enum.sum(durations), length(durations)),
@@ -40,11 +53,13 @@ defmodule Ciroque.Monitoring.Reducers do
     }
   end
 
-  def retrieve_stats(state, keys) do
-    flatten_entries(state, keys)
-    |> with_stats
-  end
+  @doc """
+  Records the given duration into the state. In this case the given `started_at` and `ended_at` values are used to
+  caluclate the duration.
 
+  Note: While this can be used outside of the StatsAgg module, it is not intended for direct use
+  outside of the Context of the StatsAgg module.
+  """
   def put_duration(state, %{group: _group, module: _module, function: _function, started_at: started_at, ended_at: ended_at} = args) do
     duration = ended_at - started_at
     args = args
@@ -54,6 +69,38 @@ defmodule Ciroque.Monitoring.Reducers do
     put_duration(state, args)
   end
 
+  @doc """
+  Calculates and returns the stats for the given keys in the given state.
+
+  The shape of the data returned:
+
+    ```
+    %{
+      avg_duration: integer,
+      durations: list(integer),
+      function: String.t,
+      group: String.t,
+      max_duration: integer,
+      min_duration: integer,
+      module: String.t,
+      most_recent_duration: integer,
+    }
+    ```
+
+  Note: While this can be used outside of the StatsAgg module, it is not intended for direct use
+  outside of the Context of the StatsAgg module.
+  """
+  def retrieve_stats(state, keys) do
+    flatten_entries(state, keys)
+    |> with_stats
+  end
+
+  @doc """
+  Records the given duration into the state.
+
+  Note: While this can be used outside of the StatsAgg module, it is not intended for direct use
+  outside of the Context of the StatsAgg module.
+  """
   def put_duration(state, %{group: group, module: module, function: function, duration: duration}) do
     keys = [
       to_string(group),

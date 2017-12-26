@@ -68,19 +68,13 @@ defmodule StatsAggMacrosTest do
 
   defp instrumented_function() do
     with_stats_agg(@group_name) do
-      1..100_000
-      |> Enum.map(fn index ->
-        {:ok, %{index: index, mapped: rem(index, 10)}}
-      end)
+      for i <- 1..100_000, do: %{ index: i, mapped: rem(i, 10) }
     end
   end
 
   defp instrumented_function_with_default_group() do
     with_stats_agg() do
-      1..100_000
-      |> Enum.map(fn index ->
-        {:ok, %{index: index, mapped: rem(index, 10)}}
-      end)
+      for i <- 1..100_000, do: %{ index: i, mapped: rem(i, 10) }
     end
   end
 end
