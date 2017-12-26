@@ -18,3 +18,6 @@ jobs:
       - run:
           name: Run tests
           command: mix test
+      - run:
+          name: Generate docs
+          command: mix docs
