@@ -27,8 +27,8 @@ defmodule StatsAgg.Mixfile do
 
   def project do
     [
-      app: :stats_agg,
-      version: "0.1.4",
+      app: :ex_stats_agg,
+      version: "0.1.5",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env),
       start_permanent: Mix.env == :prod,
